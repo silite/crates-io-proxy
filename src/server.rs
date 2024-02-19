@@ -45,8 +45,7 @@ fn config(Data(conf): Data<&ProxyConfig>) -> FtHttpResponse {
 
 #[handler]
 fn download(
-    Path(name): Path<String>,
-    Path(version): Path<String>,
+    Path((name, version)): Path<(String, String)>,
     Data(conf): Data<&ProxyConfig>,
 ) -> Vec<u8> {
     let crate_info = CrateInfo::new(&name, &version);
@@ -58,7 +57,7 @@ fn download(
 }
 
 #[handler]
-fn prefetch_crates(Path(a): Path<String>, Path(b): Path<String>, Path(name): Path<String>) {}
+fn prefetch_crates() {}
 
 #[handler]
-fn prefetch_len2_crates(Path(a): Path<String>, Path(name): Path<String>) {}
+fn prefetch_len2_crates() {}
