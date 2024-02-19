@@ -29,10 +29,10 @@ pub fn start(conf: ProxyConfig) -> anyhow::Result<()> {
     let listener = TcpListener::bind(format!("0.0.0.0:{}", 8888));
     let server = Server::new(listener);
     let app = Route::new()
-        .at("/index/config.json", config)
-        .at("/:name/:version/download", download)
-        .at("/:a/:b/:name", prefetch_crates)
-        .at("/:a/:name", prefetch_len2_crates)
+        .at("/index/config.json", get(config))
+        .at("/:name/:version/download", get(download))
+        .at("/:a/:b/:name", get(prefetch_crates))
+        .at("/:a/:name", get(prefetch_len2_crates))
         .data(conf);
     TOKIO_RUNTIME.block_on(server.run(app))?;
     Ok(())
