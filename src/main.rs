@@ -27,6 +27,8 @@ mod crate_info;
 mod file_cache;
 mod index_entry;
 mod metadata_cache;
+mod resp;
+mod server;
 
 use std::env;
 use std::fmt::Display;
@@ -332,22 +334,15 @@ fn send_fetch_error_response(request: Request, error: Box<ureq::Error>) {
 /// Forwards the crate download request to the upstream server.
 ///
 /// Processes the download request in a dedicated thread.
-fn forward_download_request(request: Request, crate_info: CrateInfo, config: ProxyConfig) {
-    let thread_name = format!("worker-fetch-crate-{}", crate_info.name());
-
-    let thread_proc = move || match download_crate(&config.upstream_url, &crate_info) {
+fn forward_download_request(crate_info: CrateInfo, config: ProxyConfig) -> Vec<u8> {
+    match download_crate(&config.upstream_url, &crate_info) {
         Ok(data) => {
             info!("fetch: successfully downloaded {crate_info}");
             cache_store_crate(&config.crates_dir, &crate_info, &data);
-            send_crate_data_response(request, data);
+            return data;
         }
-        Err(err) => send_fetch_error_response(request, err),
-    };
-
-    std::thread::Builder::new()
-        .name(thread_name)
-        .spawn(thread_proc)
-        .expect("failed to spawn the crate download thread");
+        Err(_) => vec![],
+    }
 }
 
 /// Forwards the registry index entry download request to the upstream server.
@@ -442,7 +437,7 @@ fn handle_download_request(request: Request, crate_url: &str, config: &ProxyConf
         debug!("proxy: local cache hit for {crate_info}");
         send_crate_data_response(request, data);
     } else {
-        forward_download_request(request, crate_info, config.clone());
+        // forward_download_request(request, crate_info, config.clone());
     }
 }
 
@@ -698,5 +693,6 @@ fn main() {
     };
 
     // Start the main HTTP server.
-    main_loop(&listen_addr, &config)
+    // main_loop(&listen_addr, &config)
+    crate::server::start(config).unwrap();
 }
