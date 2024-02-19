@@ -61,7 +61,7 @@ const LISTEN_ADDRESS: &str = "0.0.0.0:8888";
 const INDEX_CRATES_IO_URL: &str = "https://rsproxy.cn/crates.io-index";
 
 /// Upstream `crates.io` registry URL
-const CRATES_IO_URL: &str = "https://rsproxy.cn";
+const CRATES_IO_URL: &str = "https://rsproxy.cn/index/";
 
 /// Default external URL of this proxy server
 const DEFAULT_PROXY_URL: &str = "http://localhost:8888/";
@@ -317,10 +317,7 @@ fn send_fetch_error_response(request: Request, error: Box<ureq::Error>) {
         // Forward the HTTP error status received from the upstream server.
         ureq::Error::Status(code, response) => {
             let json = response.into_string().unwrap_or_else(format_json_error);
-            warn!(
-                "fetch: upstream returned HTTP status {code}: {json} {:?}",
-                request.remote_addr()
-            );
+            warn!("fetch: upstream returned HTTP status {code}: {json}",);
             send_json_response(request, code, json);
         }
 
