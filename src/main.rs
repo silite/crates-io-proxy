@@ -58,7 +58,7 @@ use crate::metadata_cache::{
 const LISTEN_ADDRESS: &str = "0.0.0.0:8888";
 
 /// Upstream `crates.io` registry index URL
-const INDEX_CRATES_IO_URL: &str = "https://rsproxy.cn/crates.io-index";
+const INDEX_CRATES_IO_URL: &str = "https://rsproxy.cn/crates.io-index/";
 
 /// Upstream `crates.io` registry URL
 const CRATES_IO_URL: &str = "https://rsproxy.cn/index/";
