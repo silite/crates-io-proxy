@@ -4,9 +4,10 @@ use once_cell::sync::Lazy;
 use poem::{
     get, handler,
     listener::TcpListener,
-    web::{Data, Path},
-    EndpointExt, Route, Server,
+    web::{headers::ContentType, Data, Json, Path},
+    EndpointExt, IntoResponse, Route, Server,
 };
+use serde_json::Value;
 use tokio::runtime::{Builder, Runtime};
 use url::Url;
 
@@ -57,8 +58,8 @@ pub fn start(conf: ProxyConfig) -> anyhow::Result<()> {
 }
 
 #[handler]
-fn config(Data(conf): Data<&ProxyConfig>) -> FtHttpResponse {
-    gen_config_json_file(conf).json_ok()
+fn config(Data(conf): Data<&ProxyConfig>) -> Json<Value> {
+    Json(serde_json::from_str(&gen_config_json_file(conf)).unwrap())
 }
 
 #[handler]
