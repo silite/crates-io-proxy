@@ -317,7 +317,10 @@ fn send_fetch_error_response(request: Request, error: Box<ureq::Error>) {
         // Forward the HTTP error status received from the upstream server.
         ureq::Error::Status(code, response) => {
             let json = response.into_string().unwrap_or_else(format_json_error);
-            warn!("fetch: upstream returned HTTP status {code}: {json}");
+            warn!(
+                "fetch: upstream returned HTTP status {code}: {json} {}",
+                request.url()
+            );
             send_json_response(request, code, json);
         }
 
