@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use once_cell::sync::Lazy;
 use poem::{
     get, handler,
@@ -6,6 +8,7 @@ use poem::{
     EndpointExt, Route, Server,
 };
 use tokio::runtime::{Builder, Runtime};
+use url::Url;
 
 use crate::{
     config_json::gen_config_json_file,
@@ -13,7 +16,7 @@ use crate::{
     file_cache::cache_fetch_crate,
     forward_download_request,
     resp::{ApiResponseOk, FtHttpResponse},
-    send_crate_data_response, ProxyConfig,
+    ProxyConfig,
 };
 
 pub static TOKIO_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
@@ -21,6 +24,21 @@ pub static TOKIO_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
         .thread_name("stats-web")
         .worker_threads(40)
         .enable_all()
+        .build()
+        .unwrap()
+});
+pub static CLIENT: Lazy<reqwest::blocking::Client> = Lazy::new(|| {
+    reqwest::blocking::ClientBuilder::new()
+        .connect_timeout(Duration::from_secs(2)) // 链接阶段
+        .timeout(Duration::from_secs(5)) // 读写阶段
+        .build()
+        .unwrap()
+});
+pub static ASYNC_CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {
+    reqwest::ClientBuilder::new()
+        .connect_timeout(Duration::from_secs(2))
+        .timeout(Duration::from_secs(5))
+        .user_agent("curl/7.68.0")
         .build()
         .unwrap()
 });
@@ -57,7 +75,45 @@ fn download(
 }
 
 #[handler]
-fn prefetch_crates() {}
+async fn prefetch_crates(Path((_a, _b, name)): Path<(String, String, String)>) -> Vec<u8> {
+    prefetch_with_name(&name).await
+}
 
 #[handler]
-fn prefetch_len2_crates() {}
+async fn prefetch_len2_crates(Path((_a, name)): Path<(String, String)>) -> Vec<u8> {
+    prefetch_with_name(&name).await
+}
+
+async fn prefetch_with_name(name: &str) -> Vec<u8> {
+    let url = build_url(name);
+    ASYNC_CLIENT
+        .get(url)
+        .send()
+        .await
+        .unwrap()
+        .text()
+        .await
+        .unwrap()
+        .into_bytes()
+}
+fn build_url(name: &str) -> Url {
+    Url::parse("https://rsproxy.cn/index/")
+        .unwrap()
+        .join(&crate_sub_path(name))
+        .unwrap()
+}
+fn crate_sub_path(name: &str) -> String {
+    match name.len() {
+        1 => format!("1/{}", name),
+        2 => format!("2/{}", name),
+        3 => {
+            let first_char = &name[0..1];
+            format!("3/{}/{}", first_char, name)
+        }
+        _ => {
+            let first_two = &name[0..2];
+            let second_two = &name[2..4];
+            format!("{}/{}/{}", first_two, second_two, name)
+        }
+    }
+}
