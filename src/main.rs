@@ -319,7 +319,7 @@ fn send_fetch_error_response(request: Request, error: Box<ureq::Error>) {
             let json = response.into_string().unwrap_or_else(format_json_error);
             warn!(
                 "fetch: upstream returned HTTP status {code}: {json} {:?}",
-                request
+                request.headers()
             );
             send_json_response(request, code, json);
         }
