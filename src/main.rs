@@ -27,7 +27,6 @@ mod crate_info;
 mod file_cache;
 mod index_entry;
 mod metadata_cache;
-mod resp;
 mod server;
 
 use std::env;
