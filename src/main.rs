@@ -64,7 +64,7 @@ const INDEX_CRATES_IO_URL: &str = "https://rsproxy.cn/index/";
 const CRATES_IO_URL: &str = "https://rsproxy.cn/crates.io-index";
 
 /// Default external URL of this proxy server
-const DEFAULT_PROXY_URL: &str = "http://localhost:8888/";
+const DEFAULT_PROXY_URL: &str = "http://xz07:8888/";
 
 /// Sparse registry index access path
 const CRATES_INDEX_PATH: &str = "/index/";
