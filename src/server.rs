@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use log::log;
+use log::{log, trace};
 use once_cell::sync::Lazy;
 use poem::{
     get, handler,
@@ -88,7 +88,7 @@ async fn prefetch_len2_crates(Path((_a, name)): Path<(String, String)>) -> Vec<u
 
 async fn prefetch_with_name(name: &str) -> Vec<u8> {
     let url = build_url(name);
-    log!("{:?}", url);
+    trace!("{:?}", url);
     ASYNC_CLIENT
         .get(url)
         .send()
