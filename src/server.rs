@@ -13,12 +13,8 @@ use tokio::runtime::{Builder, Runtime};
 use url::Url;
 
 use crate::{
-    config_json::gen_config_json_file,
-    crate_info::CrateInfo,
-    file_cache::cache_fetch_crate,
-    forward_download_request,
-    resp::{ApiResponseOk, FtHttpResponse},
-    ProxyConfig,
+    config_json::gen_config_json_file, crate_info::CrateInfo, file_cache::cache_fetch_crate,
+    forward_download_request, ProxyConfig,
 };
 
 pub static TOKIO_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
