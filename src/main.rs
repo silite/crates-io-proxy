@@ -55,16 +55,16 @@ use crate::metadata_cache::{
 };
 
 /// Default listen address and port
-const LISTEN_ADDRESS: &str = "0.0.0.0:3080";
+const LISTEN_ADDRESS: &str = "0.0.0.0:8888";
 
 /// Upstream `crates.io` registry index URL
-const INDEX_CRATES_IO_URL: &str = "https://index.crates.io/";
+const INDEX_CRATES_IO_URL: &str = "https://rsproxy.cn/crates.io-index";
 
 /// Upstream `crates.io` registry URL
-const CRATES_IO_URL: &str = "https://crates.io/";
+const CRATES_IO_URL: &str = "https://rsproxy.cn/";
 
 /// Default external URL of this proxy server
-const DEFAULT_PROXY_URL: &str = "http://localhost:3080/";
+const DEFAULT_PROXY_URL: &str = "http://localhost:8888/";
 
 /// Sparse registry index access path
 const CRATES_INDEX_PATH: &str = "/index/";
@@ -73,10 +73,10 @@ const CRATES_INDEX_PATH: &str = "/index/";
 const CRATES_API_PATH: &str = "/api/v1/crates/";
 
 /// Default crate files cache directory path
-const DEFAULT_CACHE_DIR: &str = "/var/cache/crates-io-proxy";
+const DEFAULT_CACHE_DIR: &str = "/opt/crates-io-proxy";
 
 /// Default index cache entry Time-to-Live in seconds
-const DEFAULT_CACHE_TTL_SECS: u64 = 3600;
+const DEFAULT_CACHE_TTL_SECS: u64 = 86400;
 
 /// Default index entry download buffer capacity
 const INDEX_ENTRY_CAPACITY: usize = 0x10000;
