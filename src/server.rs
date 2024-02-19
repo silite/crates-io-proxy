@@ -58,7 +58,7 @@ fn download(
 }
 
 #[handler]
-fn prefetch_crates() {}
+fn prefetch_crates(Path(a): Path<String>, Path(b): Path<String>, Path(name): Path<String>) {}
 
 #[handler]
-fn prefetch_len2_crates() {}
+fn prefetch_len2_crates(Path(a): Path<String>, Path(name): Path<String>) {}
