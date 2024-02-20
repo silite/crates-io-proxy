@@ -29,10 +29,11 @@ pub async fn start(conf: ProxyConfig) {
     .await;
 }
 
-async fn config(conf: web::Data<ProxyConfig>) -> Result<HttpResponse> {
+async fn config(conf: web::Data<ProxyConfig>) -> web::Json<String> {
     let json_config = gen_config_json_file(&conf);
-    Ok(HttpResponse::Ok().json(serde_json::from_str(&json_config)?))
+    web::Json(serde_json::from_str(&json_config).unwrap())
 }
+
 // async fn download(
 //     Path((name, version)): Path<(String, String)>,
 //     State(conf): State<ProxyConfig>,
