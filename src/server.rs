@@ -83,7 +83,7 @@ async fn prefetch_len2_crates(
 }
 
 async fn prefetch_with_name(name: &str, conf: &ProxyConfig) -> Vec<u8> {
-    trace!("{:?}", conf.sparse_dir.join(crate_sub_path(name)));
+    log::trace!("{:?}", conf.sparse_dir.join(crate_sub_path(name)));
     read(conf.sparse_dir.join(crate_sub_path(name))).unwrap()
 }
 fn crate_sub_path(name: &str) -> String {
