@@ -1,6 +1,5 @@
 use actix_files as fs;
 use actix_web::{get, web, App, Error, HttpRequest, HttpServer, Result};
-use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use serde_json::Value;
 
 use crate::{
@@ -8,21 +7,8 @@ use crate::{
     init::get_prefetch_path, ProxyConfig,
 };
 
-// pub fn start(conf: ProxyConfig) {
-//     let app = Router::new()
-//         .route("/index/config.json", get(config))
-//         .route("/api/v1/crates/:name/:version/download", get(download))
-//         .route("/index/:a/:b/:name", get(prefetch_crates))
-//         .route("/index/:a/:name", get(prefetch_len2_crates))
-//         .with_state(conf);
-
 #[actix_web::main]
 pub async fn start(conf: ProxyConfig) {
-    let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
-    builder
-        .set_private_key_file("./key.pem", SslFiletype::PEM)
-        .unwrap();
-    builder.set_certificate_chain_file("./cert.pem").unwrap();
     let _ = HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(conf.clone()))
@@ -31,7 +17,7 @@ pub async fn start(conf: ProxyConfig) {
             .service(prefetch_len2_crates)
             .service(download)
     })
-    .bind_openssl(("0.0.0.0", 8888), builder)
+    .bind(("0.0.0.0", 8888))
     .unwrap()
     .run()
     .await;
