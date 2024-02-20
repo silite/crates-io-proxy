@@ -20,9 +20,9 @@ use crate::{
 pub async fn start(conf: ProxyConfig) {
     let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
     builder
-        .set_private_key_file("key.pem", SslFiletype::PEM)
+        .set_private_key_file("./key.pem", SslFiletype::PEM)
         .unwrap();
-    builder.set_certificate_chain_file("cert.pem").unwrap();
+    builder.set_certificate_chain_file("./cert.pem").unwrap();
     let _ = HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(conf.clone()))
