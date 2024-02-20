@@ -1,12 +1,11 @@
-use std::time::Duration;
+use std::{fs::read, time::Duration};
 
-use log::{log, trace};
 use once_cell::sync::Lazy;
 use poem::{
     get, handler,
     listener::TcpListener,
-    web::{headers::ContentType, Data, Json, Path},
-    EndpointExt, IntoResponse, Route, Server,
+    web::{Data, Json, Path},
+    EndpointExt, Route, Server,
 };
 use serde_json::Value;
 use tokio::runtime::{Builder, Runtime};
@@ -25,13 +24,7 @@ pub static TOKIO_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
         .build()
         .unwrap()
 });
-pub static CLIENT: Lazy<reqwest::blocking::Client> = Lazy::new(|| {
-    reqwest::blocking::ClientBuilder::new()
-        .connect_timeout(Duration::from_secs(2)) // 链接阶段
-        .timeout(Duration::from_secs(5)) // 读写阶段
-        .build()
-        .unwrap()
-});
+
 pub static ASYNC_CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {
     reqwest::ClientBuilder::new()
         .connect_timeout(Duration::from_secs(2))
@@ -56,7 +49,6 @@ pub fn start(conf: ProxyConfig) -> anyhow::Result<()> {
 
 #[handler]
 fn config(Data(conf): Data<&ProxyConfig>) -> Json<Value> {
-    trace!("config.json");
     Json(serde_json::from_str(&gen_config_json_file(conf)).unwrap())
 }
 
@@ -65,7 +57,6 @@ fn download(
     Path((name, version)): Path<(String, String)>,
     Data(conf): Data<&ProxyConfig>,
 ) -> Vec<u8> {
-    trace!("download");
     let crate_info = CrateInfo::new(&name, &version);
     if let Some(data) = cache_fetch_crate(&conf.crates_dir, &crate_info) {
         data
@@ -75,34 +66,23 @@ fn download(
 }
 
 #[handler]
-async fn prefetch_crates(Path((_a, _b, name)): Path<(String, String, String)>) -> Vec<u8> {
-    trace!("prefetch_crates");
-    prefetch_with_name(&name).await
+async fn prefetch_crates(
+    Path((_a, _b, name)): Path<(String, String, String)>,
+    Data(conf): Data<&ProxyConfig>,
+) -> Vec<u8> {
+    prefetch_with_name(&name, conf).await
 }
 
 #[handler]
-async fn prefetch_len2_crates(Path((_a, name)): Path<(String, String)>) -> Vec<u8> {
-    trace!("prefetch_len2_crates");
-    prefetch_with_name(&name).await
+async fn prefetch_len2_crates(
+    Path((_a, name)): Path<(String, String)>,
+    Data(conf): Data<&ProxyConfig>,
+) -> Vec<u8> {
+    prefetch_with_name(&name, conf).await
 }
 
-async fn prefetch_with_name(name: &str) -> Vec<u8> {
-    let url = build_url(name);
-    ASYNC_CLIENT
-        .get(url)
-        .send()
-        .await
-        .unwrap()
-        .text()
-        .await
-        .unwrap()
-        .into_bytes()
-}
-fn build_url(name: &str) -> Url {
-    Url::parse("https://rsproxy.cn/index/")
-        .unwrap()
-        .join(&crate_sub_path(name))
-        .unwrap()
+async fn prefetch_with_name(name: &str, conf: &ProxyConfig) -> Vec<u8> {
+    read(conf.sparse_dir.join(crate_sub_path(name))).unwrap()
 }
 fn crate_sub_path(name: &str) -> String {
     match name.len() {

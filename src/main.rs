@@ -76,6 +76,8 @@ const CRATES_API_PATH: &str = "/api/v1/crates/";
 /// Default crate files cache directory path
 const DEFAULT_CACHE_DIR: &str = "/opt/crates-io-proxy";
 
+const DEFAULT_SPARSE_INDEX_DIR: &str = "~/rongjiale/crates.io-index/";
+
 /// Default index cache entry Time-to-Live in seconds
 const DEFAULT_CACHE_TTL_SECS: u64 = 86400;
 
@@ -117,6 +119,8 @@ struct ProxyConfig {
 
     /// Index entry cache Time-to-Live (defaults to [`DEFAULT_CACHE_TTL_SECS`])
     cache_ttl: Duration,
+
+    sparse_dir: PathBuf,
 }
 
 /// Registry index entry download response
@@ -592,6 +596,8 @@ fn main() {
         env::var("CRATES_IO_PROXY_URL").unwrap_or_else(|_| DEFAULT_PROXY_URL.to_string());
     let default_cache_dir =
         env::var("CRATES_IO_PROXY_CACHE_DIR").unwrap_or_else(|_| DEFAULT_CACHE_DIR.to_string());
+    let default_sparse_dir =
+        env::var("LOCAL_SPARSE_DIR").unwrap_or_else(|_| DEFAULT_SPARSE_INDEX_DIR.to_string());
     let default_cache_ttl_secs: u64 = env::var("CRATES_IO_PROXY_CACHE_TTL")
         .map_or(DEFAULT_CACHE_TTL_SECS, |s| {
             s.parse().expect("bad CRATES_IO_PROXY_CACHE_DIR value")
@@ -639,6 +645,11 @@ fn main() {
         .expect("bad cache directory argument")
         .unwrap_or(default_cache_dir);
 
+    let sparse_dir_string = args
+        .opt_value_from_str(["-P", "--sparse-dir"])
+        .expect("local sparse dir")
+        .unwrap_or(default_sparse_dir);
+
     let cache_ttl_secs: u64 = args
         .opt_value_from_str(["-T", "--cache-ttl"])
         .expect("bad cache TTL argument")
@@ -669,6 +680,7 @@ fn main() {
     let index_dir = cache_dir.join("index");
     let crates_dir = cache_dir.join("crates");
     let cache_ttl = Duration::from_secs(cache_ttl_secs);
+    let sparse_dir = PathBuf::from(sparse_dir_string);
 
     info!(
         "cache: using index directory: {}",
@@ -689,6 +701,7 @@ fn main() {
         index_dir,
         crates_dir,
         cache_ttl,
+        sparse_dir,
     };
 
     // Start the main HTTP server.
