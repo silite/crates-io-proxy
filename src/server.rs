@@ -1,4 +1,4 @@
-use std::{fs::read, time::Instant};
+use std::fs::read;
 
 use once_cell::sync::Lazy;
 use poem::{
@@ -20,6 +20,7 @@ pub static TOKIO_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
         .thread_name("stats-web")
         .worker_threads(40)
         .enable_all()
+        .enable_io()
         .build()
         .unwrap()
 });
@@ -72,10 +73,7 @@ async fn prefetch_len2_crates(
 }
 
 async fn prefetch_with_name(name: &str, conf: &ProxyConfig) -> Vec<u8> {
-    let start = Instant::now();
-    let res = read(conf.sparse_dir.join(crate_sub_path(name))).unwrap();
-    log::trace!("{:?}", Instant::now().duration_since(start));
-    res
+    read(conf.sparse_dir.join(crate_sub_path(name))).unwrap()
 }
 fn crate_sub_path(name: &str) -> String {
     match name.len() {
