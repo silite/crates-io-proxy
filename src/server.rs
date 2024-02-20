@@ -1,5 +1,6 @@
 use actix_files as fs;
 use actix_web::{get, web, App, Error, HttpRequest, HttpServer, Result};
+use openssl::ssl::{SslAcceptor, SslFiletype, SslMethod};
 use serde_json::Value;
 
 use crate::{
@@ -17,6 +18,11 @@ use crate::{
 
 #[actix_web::main]
 pub async fn start(conf: ProxyConfig) {
+    let mut builder = SslAcceptor::mozilla_intermediate(SslMethod::tls()).unwrap();
+    builder
+        .set_private_key_file("key.pem", SslFiletype::PEM)
+        .unwrap();
+    builder.set_certificate_chain_file("cert.pem").unwrap();
     let _ = HttpServer::new(move || {
         App::new()
             .app_data(web::Data::new(conf.clone()))
@@ -25,7 +31,7 @@ pub async fn start(conf: ProxyConfig) {
             .service(prefetch_len2_crates)
             .service(download)
     })
-    .bind(("0.0.0.0", 8888))
+    .bind_openssl(("0.0.0.0", 8888), builder)
     .unwrap()
     .run()
     .await;
