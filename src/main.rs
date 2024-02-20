@@ -45,7 +45,7 @@ use log::{debug, error, info, warn};
 use tiny_http::{Header, Request, Response};
 use url::Url;
 
-use crate::config_json::{gen_config_json_file, is_config_json_url};
+use crate::config_json::gen_config_json_file;
 use crate::crate_info::CrateInfo;
 use crate::file_cache::{
     cache_fetch_crate, cache_fetch_index_entry, cache_store_crate, cache_store_index_entry,
@@ -444,12 +444,6 @@ fn handle_download_request(request: Request, crate_url: &str, config: &ProxyConf
 
 /// Processes one sparse registry index API request.
 fn handle_index_request(request: Request, index_url: &str, config: &ProxyConfig) {
-    if is_config_json_url(index_url) {
-        debug!("proxy: sending registry config file");
-        send_json_response(request, 200, gen_config_json_file(config));
-        return;
-    }
-
     let Some(mut index_entry) = IndexEntry::try_from_index_url(index_url) else {
         warn!("proxy: malformed registry index path: {index_url}");
         send_error_response(request, 404);

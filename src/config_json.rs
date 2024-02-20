@@ -2,15 +2,6 @@
 
 use super::{ProxyConfig, CRATES_API_PATH};
 
-/// Registry configuration file endpoint path
-const CONFIG_JSON_ENDPOINT: &str = "config.json";
-
-/// Checks for the registry configuration file download endpoint.
-#[must_use]
-pub fn is_config_json_url(index_url: &str) -> bool {
-    index_url == CONFIG_JSON_ENDPOINT
-}
-
 /// Dynamically generates the registry configuration file contents.
 #[must_use]
 pub(super) fn gen_config_json_file(config: &ProxyConfig) -> String {
