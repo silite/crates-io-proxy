@@ -56,6 +56,7 @@ pub fn start(conf: ProxyConfig) -> anyhow::Result<()> {
 
 #[handler]
 fn config(Data(conf): Data<&ProxyConfig>) -> Json<Value> {
+    trace!("config.json");
     Json(serde_json::from_str(&gen_config_json_file(conf)).unwrap())
 }
 
@@ -64,6 +65,7 @@ fn download(
     Path((name, version)): Path<(String, String)>,
     Data(conf): Data<&ProxyConfig>,
 ) -> Vec<u8> {
+    trace!("download");
     let crate_info = CrateInfo::new(&name, &version);
     if let Some(data) = cache_fetch_crate(&conf.crates_dir, &crate_info) {
         data
@@ -74,11 +76,13 @@ fn download(
 
 #[handler]
 async fn prefetch_crates(Path((_a, _b, name)): Path<(String, String, String)>) -> Vec<u8> {
+    trace!("prefetch_crates");
     prefetch_with_name(&name).await
 }
 
 #[handler]
 async fn prefetch_len2_crates(Path((_a, name)): Path<(String, String)>) -> Vec<u8> {
+    trace!("prefetch_len2_crates");
     prefetch_with_name(&name).await
 }
 
