@@ -41,7 +41,7 @@ use pico_args::Arguments;
 use env_logger::{Builder as LogBuilder, Env as LogEnv};
 use log::{debug, error, info, warn};
 
-use tiny_http::{Header, Method, Request, Response, Server};
+use tiny_http::{Header, Request, Response};
 use url::Url;
 
 use crate::config_json::{gen_config_json_file, is_config_json_url};
@@ -66,9 +66,6 @@ const CRATES_IO_URL: &str = "https://rsproxy.cn/index";
 
 /// Default external URL of this proxy server
 const DEFAULT_PROXY_URL: &str = "http://xz07:8888/";
-
-/// Sparse registry index access path
-const CRATES_INDEX_PATH: &str = "/index/";
 
 /// Crates download API path
 const CRATES_API_PATH: &str = "/api/v1/crates/";
@@ -512,46 +509,6 @@ fn handle_index_request(request: Request, index_url: &str, config: &ProxyConfig)
 
     // Fall back to forwarding the request to the upstream registry.
     forward_index_request(request, index_entry, mtimed_entry, config.clone());
-}
-
-/// Processes one HTTP GET request.
-///
-/// Only registry index and download API requests are supported.
-fn handle_get_request(request: Request, config: &ProxyConfig) {
-    let url = request.url().to_owned();
-
-    if let Some(index_url) = url.strip_prefix(CRATES_INDEX_PATH) {
-        handle_index_request(request, index_url, config);
-    } else if let Some(crate_url) = url.strip_prefix(CRATES_API_PATH) {
-        handle_download_request(request, crate_url, config);
-    } else {
-        warn!("proxy: unknown index or download API path: {url}");
-        send_error_response(request, 404);
-    };
-}
-
-/// Runs HTTP proxy server forever.
-fn main_loop(listen_addr: &str, config: &ProxyConfig) -> ! {
-    info!("proxy: starting HTTP server at: {listen_addr}");
-
-    let server = Server::http(listen_addr).expect("failed to start the HTTP server");
-
-    // Main HTTP request accept loop.
-    loop {
-        let request = server.recv().expect("failed to accept new HTTP requests");
-
-        // Forbid non-downloading HTTP methods.
-        if *request.method() != Method::Get {
-            warn!(
-                "proxy: unexpected download API method: {}",
-                request.method()
-            );
-            send_error_response(request, 403);
-            continue;
-        }
-
-        handle_get_request(request, config);
-    }
 }
 
 /// Prints the program version banner.

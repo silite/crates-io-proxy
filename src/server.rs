@@ -1,16 +1,14 @@
-use std::{fs::read, time::Duration};
+use std::{fs::read, time::Instant};
 
 use once_cell::sync::Lazy;
 use poem::{
     get, handler,
     listener::TcpListener,
-    trace,
     web::{Data, Json, Path},
     EndpointExt, Route, Server,
 };
 use serde_json::Value;
 use tokio::runtime::{Builder, Runtime};
-use url::Url;
 
 use crate::{
     config_json::gen_config_json_file, crate_info::CrateInfo, file_cache::cache_fetch_crate,
@@ -22,15 +20,6 @@ pub static TOKIO_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
         .thread_name("stats-web")
         .worker_threads(40)
         .enable_all()
-        .build()
-        .unwrap()
-});
-
-pub static ASYNC_CLIENT: Lazy<reqwest::Client> = Lazy::new(|| {
-    reqwest::ClientBuilder::new()
-        .connect_timeout(Duration::from_secs(2))
-        .timeout(Duration::from_secs(5))
-        .user_agent("curl/7.68.0")
         .build()
         .unwrap()
 });
@@ -83,8 +72,10 @@ async fn prefetch_len2_crates(
 }
 
 async fn prefetch_with_name(name: &str, conf: &ProxyConfig) -> Vec<u8> {
-    log::trace!("{:?}", conf.sparse_dir.join(crate_sub_path(name)));
-    read(conf.sparse_dir.join(crate_sub_path(name))).unwrap()
+    let start = Instant::now();
+    let res = read(conf.sparse_dir.join(crate_sub_path(name))).unwrap();
+    log::trace!("{:?}", Instant::now().duration_since(start));
+    res
 }
 fn crate_sub_path(name: &str) -> String {
     match name.len() {
