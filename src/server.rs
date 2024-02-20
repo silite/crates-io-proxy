@@ -23,6 +23,7 @@ pub async fn start(conf: ProxyConfig) {
             .route("/index/config.json", web::get().to(config))
             .service(prefetch_crates)
             .service(prefetch_len2_crates)
+            .service(download)
     })
     .bind(("0.0.0.0", 8888))
     .unwrap()
