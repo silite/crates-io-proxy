@@ -30,8 +30,8 @@ pub async fn start(conf: ProxyConfig) {
 }
 
 async fn config(conf: web::Data<ProxyConfig>) -> web::Json<String> {
-    let json_config = gen_config_json_file(&conf);
-    web::Json(serde_json::from_str(&json_config).unwrap())
+    let conf = serde_json::from_str(&gen_config_json_file(&conf)).unwrap();
+    web::Json(conf)
 }
 
 // async fn download(
