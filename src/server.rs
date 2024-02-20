@@ -8,16 +8,6 @@ use crate::{
     forward_download_request, init::prefetch_with_name, ProxyConfig,
 };
 
-pub static TOKIO_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
-    Builder::new_multi_thread()
-        .thread_name("stats-web")
-        .worker_threads(64)
-        .enable_all()
-        .enable_io()
-        .build()
-        .unwrap()
-});
-
 // pub fn start(conf: ProxyConfig) {
 //     let app = Router::new()
 //         .route("/index/config.json", get(config))
@@ -28,16 +18,15 @@ pub static TOKIO_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
 
 #[actix_web::main]
 pub async fn start(conf: ProxyConfig) {
-    let _ = TOKIO_RUNTIME.block_on(async {
-        HttpServer::new(move || {
-            App::new()
-                .app_data(web::Data::new(conf.clone()))
-                .route("/index/config.json", web::get().to(config))
-        })
-        .bind(("0.0.0.0", 8888))?
-        .run()
-        .await
-    });
+    let _ = HttpServer::new(move || {
+        App::new()
+            .app_data(web::Data::new(conf.clone()))
+            .route("/index/config.json", web::get().to(config))
+    })
+    .bind(("0.0.0.0", 8888))
+    .unwrap()
+    .run()
+    .await;
 }
 
 async fn config(conf: web::Data<ProxyConfig>) -> Result<HttpResponse> {
