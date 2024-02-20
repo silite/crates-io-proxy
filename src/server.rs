@@ -1,5 +1,6 @@
 use actix_files as fs;
 use actix_web::{get, web, App, Error, HttpRequest, HttpServer, Result};
+use log::trace;
 use serde_json::Value;
 
 use crate::{
@@ -32,6 +33,7 @@ async fn config(conf: web::Data<ProxyConfig>) -> web::Json<Value> {
 async fn download(req: HttpRequest, conf: web::Data<ProxyConfig>) -> Result<fs::NamedFile, Error> {
     let name = req.match_info().get("name").unwrap();
     let version = req.match_info().get("version").unwrap();
+    trace!("download: {}-{}", name, version);
     let crate_info = CrateInfo::new(&name, &version);
 
     let path = conf.crates_dir.join(crate_info.to_file_path());
