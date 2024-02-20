@@ -76,7 +76,7 @@ const CRATES_API_PATH: &str = "/api/v1/crates/";
 /// Default crate files cache directory path
 const DEFAULT_CACHE_DIR: &str = "/opt/crates-io-proxy";
 
-const DEFAULT_SPARSE_INDEX_DIR: &str = "~/rongjiale/crates.io-index/";
+const DEFAULT_SPARSE_INDEX_DIR: &str = "/home/z/rongjiale/crates.io-index/";
 
 /// Default index cache entry Time-to-Live in seconds
 const DEFAULT_CACHE_TTL_SECS: u64 = 86400;
