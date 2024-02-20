@@ -46,7 +46,7 @@ pub fn start(conf: ProxyConfig) -> anyhow::Result<()> {
     let server = Server::new(listener);
     let app = Route::new()
         .at("/index/config.json", get(config))
-        .at("/:name/:version/download", get(download))
+        .at("/api/v1/crates/:name/:version/download", get(download))
         .at("/index/:a/:b/:name", get(prefetch_crates))
         .at("/index/:a/:name", get(prefetch_len2_crates))
         .data(conf);
@@ -88,7 +88,6 @@ async fn prefetch_len2_crates(Path((_a, name)): Path<(String, String)>) -> Vec<u
 
 async fn prefetch_with_name(name: &str) -> Vec<u8> {
     let url = build_url(name);
-    trace!("{:?}", url);
     ASYNC_CLIENT
         .get(url)
         .send()
