@@ -17,7 +17,7 @@ use crate::{
 pub static TOKIO_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
     Builder::new_multi_thread()
         .thread_name("stats-web")
-        .worker_threads(40)
+        .worker_threads(64)
         .enable_all()
         .enable_io()
         .build()
