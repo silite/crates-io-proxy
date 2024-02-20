@@ -1,5 +1,3 @@
-use std::fs::read;
-
 use axum::{
     extract::{Path, State},
     routing::get,
@@ -11,7 +9,7 @@ use tokio::runtime::{Builder, Runtime};
 
 use crate::{
     config_json::gen_config_json_file, crate_info::CrateInfo, file_cache::cache_fetch_crate,
-    forward_download_request, ProxyConfig,
+    forward_download_request, init::prefetch_with_name, ProxyConfig,
 };
 
 pub static TOKIO_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
@@ -66,23 +64,4 @@ async fn prefetch_len2_crates(
     State(conf): State<ProxyConfig>,
 ) -> Vec<u8> {
     prefetch_with_name(&name, &conf).await
-}
-
-async fn prefetch_with_name(name: &str, conf: &ProxyConfig) -> Vec<u8> {
-    read(conf.sparse_dir.join(crate_sub_path(name))).unwrap()
-}
-fn crate_sub_path(name: &str) -> String {
-    match name.len() {
-        1 => format!("1/{}", name),
-        2 => format!("2/{}", name),
-        3 => {
-            let first_char = &name[0..1];
-            format!("3/{}/{}", first_char, name)
-        }
-        _ => {
-            let first_two = &name[0..2];
-            let second_two = &name[2..4];
-            format!("{}/{}/{}", first_two, second_two, name)
-        }
-    }
 }

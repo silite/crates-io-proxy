@@ -26,6 +26,7 @@ mod config_json;
 mod crate_info;
 mod file_cache;
 mod index_entry;
+mod init;
 mod metadata_cache;
 mod server;
 

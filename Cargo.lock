@@ -189,6 +189,7 @@ version = "0.2.1"
 dependencies = [
  "anyhow",
  "axum",
+ "dashmap",
  "env_logger",
  "httpdate",
  "log",
@@ -210,6 +211,19 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b3855a8a784b474f333699ef2bbca9db2c4a1f6d9088a90a2d25b1eb53111eaa"
 dependencies = [
  "cfg-if",
+]
+
+[[package]]
+name = "dashmap"
+version = "5.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "978747c1d849a7d2ee5e8adc0159961c48fb7e5db2f06af6723b80123bb53856"
+dependencies = [
+ "cfg-if",
+ "hashbrown",
+ "lock_api",
+ "once_cell",
+ "parking_lot_core",
 ]
 
 [[package]]
