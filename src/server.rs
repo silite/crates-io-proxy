@@ -29,8 +29,8 @@ pub async fn start(conf: ProxyConfig) {
     .await;
 }
 
-async fn config(conf: web::Data<ProxyConfig>) -> web::Json<String> {
-    let conf = serde_json::from_str(&gen_config_json_file(&conf)).unwrap();
+async fn config(conf: web::Data<ProxyConfig>) -> web::Json<Value> {
+    let conf = serde_json::from_str::<Value>(&gen_config_json_file(&conf)).unwrap();
     web::Json(conf)
 }
 
