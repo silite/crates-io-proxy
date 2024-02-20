@@ -1,11 +1,19 @@
-use actix_web::{get, web, App, HttpRequest, HttpResponse, HttpServer, Responder, Result};
+use actix_files as fs;
+use actix_web::{
+    get, http::header::ContentDisposition, web, App, Error, HttpRequest, HttpResponse, HttpServer,
+    Responder, Result,
+};
 use once_cell::sync::Lazy;
 use serde_json::Value;
 use tokio::runtime::{Builder, Runtime};
 
 use crate::{
-    config_json::gen_config_json_file, crate_info::CrateInfo, file_cache::cache_fetch_crate,
-    forward_download_request, init::prefetch_with_name, ProxyConfig,
+    config_json::gen_config_json_file,
+    crate_info::CrateInfo,
+    file_cache::cache_fetch_crate,
+    forward_download_request,
+    init::{get_prefetch_path, prefetch_with_name},
+    ProxyConfig,
 };
 
 // pub fn start(conf: ProxyConfig) {
@@ -49,13 +57,21 @@ async fn config(conf: web::Data<ProxyConfig>) -> web::Json<Value> {
 // }
 
 #[get("/index/{_a}/{_b}/{name}")]
-async fn prefetch_crates(req: HttpRequest, conf: web::Data<ProxyConfig>) -> Vec<u8> {
+async fn prefetch_crates(
+    req: HttpRequest,
+    conf: web::Data<ProxyConfig>,
+) -> Result<fs::NamedFile, Error> {
     let name = req.match_info().get("name").unwrap();
-    prefetch_with_name(&name, &conf).await
+    let file = fs::NamedFile::open(get_prefetch_path(name, &conf))?;
+    Ok(file.use_last_modified(true).use_etag(true))
 }
 
 #[get("/index/{_a}/{name}")]
-async fn prefetch_len2_crates(req: HttpRequest, conf: web::Data<ProxyConfig>) -> Vec<u8> {
+async fn prefetch_len2_crates(
+    req: HttpRequest,
+    conf: web::Data<ProxyConfig>,
+) -> Result<fs::NamedFile, Error> {
     let name = req.match_info().get("name").unwrap();
-    prefetch_with_name(&name, &conf).await
+    let file = fs::NamedFile::open(get_prefetch_path(name, &conf))?;
+    Ok(file.use_last_modified(true).use_etag(true))
 }
