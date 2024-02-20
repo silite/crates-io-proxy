@@ -1,5 +1,7 @@
 //! Sparse registry configuration file helpers
 
+use log::trace;
+
 use super::{ProxyConfig, CRATES_API_PATH};
 
 /// Dynamically generates the registry configuration file contents.
@@ -14,6 +16,7 @@ pub(super) fn gen_config_json_file(config: &ProxyConfig) -> String {
     // Cargo can not handle trailing slashes in `config.json`.
     let dl = dl_url.as_str().trim_end_matches('/');
     let api = config.upstream_url.as_str().trim_end_matches('/');
+    trace!("config.json: dl={}, api={}", dl, api);
 
     format!(r#"{{"dl":"{dl}","api":"{api}"}}"#)
 }
