@@ -1,7 +1,7 @@
 use axum::{
     extract::{Path, State},
     routing::get,
-    Json, Router,
+    Json, Router, ServiceExt,
 };
 use once_cell::sync::Lazy;
 use serde_json::Value;
@@ -32,7 +32,9 @@ pub fn start(conf: ProxyConfig) {
 
     TOKIO_RUNTIME.block_on(async {
         let listener = tokio::net::TcpListener::bind("0.0.0.0:8888").await.unwrap();
-        axum::serve(listener, app).await.unwrap();
+        axum::serve(listener, app.into_make_service())
+            .await
+            .unwrap();
     });
 }
 

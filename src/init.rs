@@ -1,16 +1,13 @@
 use std::{collections::BTreeMap, fs::read, path::PathBuf};
 
-use log::trace;
-
 use crate::ProxyConfig;
 
 static mut PREFETCH_JSON: BTreeMap<PathBuf, Vec<u8>> = BTreeMap::new();
 pub async fn prefetch_with_name(name: &str, conf: &ProxyConfig) -> Vec<u8> {
     let path = conf.sparse_dir.join(crate_sub_path(name));
     unsafe {
-        if let Some(res) = PREFETCH_JSON.get(&path) {
-            trace!("hit cache");
-            return res.clone();
+        if let Some(res) = PREFETCH_JSON.get_mut(&path) {
+            res.clone()
         } else {
             let file = read(path.clone()).unwrap();
             PREFETCH_JSON.insert(path, file.clone());
