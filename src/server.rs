@@ -47,8 +47,8 @@ pub fn start(conf: ProxyConfig) -> anyhow::Result<()> {
     let app = Route::new()
         .at("/index/config.json", get(config))
         .at("/:name/:version/download", get(download))
-        .at("/:a/:b/:name", get(prefetch_crates))
-        .at("/:a/:name", get(prefetch_len2_crates))
+        .at("/index/:a/:b/:name", get(prefetch_crates))
+        .at("/index/:a/:name", get(prefetch_len2_crates))
         .data(conf);
     TOKIO_RUNTIME.block_on(server.run(app))?;
     Ok(())
