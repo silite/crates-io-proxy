@@ -577,11 +577,6 @@ fn main() {
         verbose += 1;
     }
 
-    let listen_addr = args
-        .opt_value_from_str(["-L", "--listen"])
-        .expect("bad listen address argument")
-        .unwrap_or_else(|| LISTEN_ADDRESS.to_string());
-
     let index_url_string = args
         .opt_value_from_str(["-I", "--index-url"])
         .expect("bad upstream index URL argument")
@@ -663,5 +658,5 @@ fn main() {
 
     // Start the main HTTP server.
     // main_loop(&listen_addr, &config)
-    crate::server::start(config).unwrap();
+    crate::server::start(config);
 }

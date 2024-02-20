@@ -1,12 +1,11 @@
 use std::fs::read;
 
-use once_cell::sync::Lazy;
-use poem::{
-    get, handler,
-    listener::TcpListener,
-    web::{Data, Json, Path},
-    EndpointExt, Route, Server,
+use axum::{
+    extract::{Path, State},
+    routing::get,
+    Json, Router,
 };
+use once_cell::sync::Lazy;
 use serde_json::Value;
 use tokio::runtime::{Builder, Runtime};
 
@@ -25,28 +24,27 @@ pub static TOKIO_RUNTIME: Lazy<Runtime> = Lazy::new(|| {
         .unwrap()
 });
 
-pub fn start(conf: ProxyConfig) -> anyhow::Result<()> {
-    let listener = TcpListener::bind(format!("0.0.0.0:{}", 8888));
-    let server = Server::new(listener);
-    let app = Route::new()
-        .at("/index/config.json", get(config))
-        .at("/api/v1/crates/:name/:version/download", get(download))
-        .at("/index/:a/:b/:name", get(prefetch_crates))
-        .at("/index/:a/:name", get(prefetch_len2_crates))
-        .data(conf);
-    TOKIO_RUNTIME.block_on(server.run(app))?;
-    Ok(())
+pub fn start(conf: ProxyConfig) {
+    let app = Router::new()
+        .route("/index/config.json", get(config))
+        .route("/api/v1/crates/:name/:version/download", get(download))
+        .route("/index/:a/:b/:name", get(prefetch_crates))
+        .route("/index/:a/:name", get(prefetch_len2_crates))
+        .with_state(conf);
+
+    TOKIO_RUNTIME.block_on(async {
+        let listener = tokio::net::TcpListener::bind("0.0.0.0:8888").await.unwrap();
+        axum::serve(listener, app).await.unwrap();
+    });
 }
 
-#[handler]
-fn config(Data(conf): Data<&ProxyConfig>) -> Json<Value> {
-    Json(serde_json::from_str(&gen_config_json_file(conf)).unwrap())
+async fn config(State(conf): State<ProxyConfig>) -> Json<Value> {
+    Json(serde_json::from_str(&gen_config_json_file(&conf)).unwrap())
 }
 
-#[handler]
-fn download(
+async fn download(
     Path((name, version)): Path<(String, String)>,
-    Data(conf): Data<&ProxyConfig>,
+    State(conf): State<ProxyConfig>,
 ) -> Vec<u8> {
     let crate_info = CrateInfo::new(&name, &version);
     if let Some(data) = cache_fetch_crate(&conf.crates_dir, &crate_info) {
@@ -56,20 +54,18 @@ fn download(
     }
 }
 
-#[handler]
 async fn prefetch_crates(
     Path((_a, _b, name)): Path<(String, String, String)>,
-    Data(conf): Data<&ProxyConfig>,
+    State(conf): State<ProxyConfig>,
 ) -> Vec<u8> {
-    prefetch_with_name(&name, conf).await
+    prefetch_with_name(&name, &conf).await
 }
 
-#[handler]
 async fn prefetch_len2_crates(
     Path((_a, name)): Path<(String, String)>,
-    Data(conf): Data<&ProxyConfig>,
+    State(conf): State<ProxyConfig>,
 ) -> Vec<u8> {
-    prefetch_with_name(&name, conf).await
+    prefetch_with_name(&name, &conf).await
 }
 
 async fn prefetch_with_name(name: &str, conf: &ProxyConfig) -> Vec<u8> {
