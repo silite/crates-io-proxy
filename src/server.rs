@@ -1,4 +1,4 @@
-use actix_web::{get, web, App, HttpResponse, HttpServer, Responder, Result};
+use actix_web::{get, web, App, HttpRequest, HttpResponse, HttpServer, Responder, Result};
 use once_cell::sync::Lazy;
 use serde_json::Value;
 use tokio::runtime::{Builder, Runtime};
@@ -22,6 +22,8 @@ pub async fn start(conf: ProxyConfig) {
         App::new()
             .app_data(web::Data::new(conf.clone()))
             .route("/index/config.json", web::get().to(config))
+            .service(prefetch_crates)
+            .service(prefetch_len2_crates)
     })
     .bind(("0.0.0.0", 8888))
     .unwrap()
@@ -46,16 +48,14 @@ async fn config(conf: web::Data<ProxyConfig>) -> web::Json<Value> {
 //     }
 // }
 
-// async fn prefetch_crates(
-//     Path((_a, _b, name)): Path<(String, String, String)>,
-//     State(conf): State<ProxyConfig>,
-// ) -> Vec<u8> {
-//     prefetch_with_name(&name, &conf).await
-// }
+#[get("/index/{_a}/{_b}/{name}")]
+async fn prefetch_crates(req: HttpRequest, conf: web::Data<ProxyConfig>) -> Vec<u8> {
+    let name = req.match_info().get("name").unwrap();
+    prefetch_with_name(&name, &conf).await
+}
 
-// async fn prefetch_len2_crates(
-//     Path((_a, name)): Path<(String, String)>,
-//     State(conf): State<ProxyConfig>,
-// ) -> Vec<u8> {
-//     prefetch_with_name(&name, &conf).await
-// }
+#[get("/index/{_a}/{name}")]
+async fn prefetch_len2_crates(req: HttpRequest, conf: web::Data<ProxyConfig>) -> Vec<u8> {
+    let name = req.match_info().get("name").unwrap();
+    prefetch_with_name(&name, &conf).await
+}
