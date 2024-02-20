@@ -335,14 +335,13 @@ fn send_fetch_error_response(request: Request, error: Box<ureq::Error>) {
 /// Forwards the crate download request to the upstream server.
 ///
 /// Processes the download request in a dedicated thread.
-fn forward_download_request(crate_info: CrateInfo, config: ProxyConfig) -> Vec<u8> {
+fn forward_download_request(crate_info: CrateInfo, config: &ProxyConfig) {
     match download_crate(&config.upstream_url, &crate_info) {
         Ok(data) => {
             info!("fetch: successfully downloaded {crate_info}");
             cache_store_crate(&config.crates_dir, &crate_info, &data);
-            return data;
         }
-        Err(_) => vec![],
+        Err(_) => {}
     }
 }
 

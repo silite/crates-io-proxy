@@ -1,19 +1,10 @@
 use actix_files as fs;
-use actix_web::{
-    get, http::header::ContentDisposition, web, App, Error, HttpRequest, HttpResponse, HttpServer,
-    Responder, Result,
-};
-use once_cell::sync::Lazy;
+use actix_web::{get, web, App, Error, HttpRequest, HttpServer, Result};
 use serde_json::Value;
-use tokio::runtime::{Builder, Runtime};
 
 use crate::{
-    config_json::gen_config_json_file,
-    crate_info::CrateInfo,
-    file_cache::cache_fetch_crate,
-    forward_download_request,
-    init::{get_prefetch_path, prefetch_with_name},
-    ProxyConfig,
+    config_json::gen_config_json_file, crate_info::CrateInfo, forward_download_request,
+    init::get_prefetch_path, ProxyConfig,
 };
 
 // pub fn start(conf: ProxyConfig) {
@@ -44,17 +35,19 @@ async fn config(conf: web::Data<ProxyConfig>) -> web::Json<Value> {
     web::Json(conf)
 }
 
-// async fn download(
-//     Path((name, version)): Path<(String, String)>,
-//     State(conf): State<ProxyConfig>,
-// ) -> Vec<u8> {
-//     let crate_info = CrateInfo::new(&name, &version);
-//     if let Some(data) = cache_fetch_crate(&conf.crates_dir, &crate_info) {
-//         data
-//     } else {
-//         forward_download_request(crate_info, conf.clone())
-//     }
-// }
+#[get("/api/v1/crates/{name}/{version}/download")]
+async fn download(req: HttpRequest, conf: web::Data<ProxyConfig>) -> Result<fs::NamedFile, Error> {
+    let name = req.match_info().get("name").unwrap();
+    let version = req.match_info().get("version").unwrap();
+    let crate_info = CrateInfo::new(&name, &version);
+
+    let path = conf.crates_dir.join(crate_info.to_file_path());
+    if !path.is_file() {
+        forward_download_request(crate_info, &conf)
+    }
+    let file = fs::NamedFile::open(path)?;
+    return Ok(file.use_last_modified(true).use_etag(true));
+}
 
 #[get("/index/{_a}/{_b}/{name}")]
 async fn prefetch_crates(
